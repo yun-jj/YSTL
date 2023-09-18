@@ -154,5 +154,41 @@ YVector<T,Alloc>::fillInsert(iterator position,sizeType n,const valueType& x)
     }
 }
 
+template<typename T,typename Alloc>
+template<typename _ForwardIterator>
+void
+YVector<T,Alloc>::rangeInsert(iterator position,_ForwardIterator first,_ForwardIterator last
+    ,ForwardIterator)
+{
+    if(first != last)
+    {
+        const sizeType n = distance(first,last);
+        if(sizeType(this->impl.endOfStorage - this->impl.start) >= n)
+        {
+            const sizeType elemsAfter = end() - position;
+            pointerType oldFinish(this->impl.finish);
+            if(elemsAfter > n)
+            {
+                uninitializedCopy(this->impl.finish - n,this->impl.finish,this->impl.finish);
+                this->impl.finish += n;
+                std::move_backward(position.base(),oldFinish - n,oldFinish);
+                std::copy(first,last,position);
+            }
+            else
+            {
+                _ForwardIterator mid = first;
+                advance(mid,elemsAfter);
+                uninitializedCopy(mid.base(),last.base(),this->impl.finish);
+                this->impl.finish += n - elemsAfter;
+                //下面的代码需要move_iterator 暂时搁置 实现代码在vector.tcc 708行
+            }
+        }
+        else
+        {
+
+        }
+    }
+}
+
 };
 #endif

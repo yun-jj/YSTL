@@ -23,7 +23,6 @@ int main(void)
     //值初始化
     YVector<int> ve(10,2);
     ve.data();
-    ve.reserve(11);
     testVectorRandomAccess(ve,"ve");
 
     YVector<int> ve1(ve.begin(),ve.end());

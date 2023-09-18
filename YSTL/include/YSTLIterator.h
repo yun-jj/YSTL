@@ -112,7 +112,7 @@ advance(_Iterator i,_n n)
 /*****以下是迭代器适配器作为最终的迭代器类型*****/
 //基本迭代器类型
 template<typename Iterator,typename Container>
-class normalIterator
+class NormalIterator
 {
 protected:
     Iterator current;
@@ -125,11 +125,11 @@ public:
     typedef typename traitsType::referenceType   referenceType;
     typedef typename traitsType::pointerType     pointerType;
 
-    constexpr normalIterator() noexcept : current(Iterator()){}
-    constexpr normalIterator(const Iterator& i) noexcept : current(i) {}
+    constexpr NormalIterator() noexcept : current(Iterator()){}
+    constexpr NormalIterator(const Iterator& i) noexcept : current(i) {}
     //下面是将iterator转换为constIterator的构造函数
     template<typename iter>
-    normalIterator(const normalIterator<iter,typename
+    NormalIterator(const NormalIterator<iter,typename
     std::enable_if<(std::is_same<iter,typename Container::pointerType>::value),Container>::type>& i)noexcept
         :current(i.base()) {}
 
@@ -143,142 +143,142 @@ public:
     operator->() const noexcept
     {return current;}
 
-    normalIterator&
+    NormalIterator&
     operator++() noexcept
     {
         ++current;
         return *this;
     }
 
-    normalIterator&
+    NormalIterator&
     operator--() noexcept
     {
         --current;
         return *this;
     }
 
-    normalIterator
+    NormalIterator
     operator++(int) noexcept
-    {return normalIterator(current++);}
+    {return NormalIterator(current++);}
 
-    normalIterator
+    NormalIterator
     operator--(int) noexcept
-    {return normalIterator(current--);}
+    {return NormalIterator(current--);}
 
     referenceType
     operator[](differenceType n) const noexcept
     {return current[n];}
 
-    normalIterator&
+    NormalIterator&
     operator+=(differenceType n) const noexcept
     {current += n; return *this;}
 
-    normalIterator&
+    NormalIterator&
     operator-=(differenceType n) const noexcept
     {current -= n; return *this;}
 
-    normalIterator
+    NormalIterator
     operator+(differenceType n) noexcept
-    {return normalIterator(current + n);}
+    {return NormalIterator(current + n);}
 
-    normalIterator
+    NormalIterator
     operator-(differenceType n) noexcept
-    {return normalIterator(current - n);}
+    {return NormalIterator(current - n);}
 
     const Iterator&
     base() const noexcept
     {return current;}
 };
 
-//以下是normalIterator 运算重载
+//以下是NormalIterator 运算重载
 template<typename IteratorLeft,typename IteratorRight,typename Container>
 inline bool
-operator==(const normalIterator<IteratorLeft,Container>& lIterator,
-            const normalIterator<IteratorRight,Container>& rIterator)
+operator==(const NormalIterator<IteratorLeft,Container>& lIterator,
+            const NormalIterator<IteratorRight,Container>& rIterator)
 {return lIterator.base() == rIterator.base();}
 
 template<typename Iterator,typename Container>
 inline bool
-operator==(const normalIterator<Iterator,Container>& lIterator,
-            const normalIterator<Iterator,Container>& rIterator)
+operator==(const NormalIterator<Iterator,Container>& lIterator,
+            const NormalIterator<Iterator,Container>& rIterator)
 {return lIterator.base() == rIterator.base();}
 
 template<typename IteratorLeft,typename IteratorRight,typename Container>
 inline bool
-operator!=(const normalIterator<IteratorLeft,Container>& lIterator,
-            const normalIterator<IteratorRight,Container>& rIterator)
+operator!=(const NormalIterator<IteratorLeft,Container>& lIterator,
+            const NormalIterator<IteratorRight,Container>& rIterator)
 {return lIterator.base() != rIterator.base();}
 
 template<typename Iterator,typename Container>
 inline bool
-operator!=(const normalIterator<Iterator,Container>& lIterator,
-            const normalIterator<Iterator,Container>& rIterator)
+operator!=(const NormalIterator<Iterator,Container>& lIterator,
+            const NormalIterator<Iterator,Container>& rIterator)
 {return lIterator.base() != rIterator.base();}
 
 template<typename IteratorLeft,typename IteratorRight,typename Container>
 inline bool
-operator<(const normalIterator<IteratorLeft,Container>& lIterator,
-            const normalIterator<IteratorRight,Container>& rIterator)
+operator<(const NormalIterator<IteratorLeft,Container>& lIterator,
+            const NormalIterator<IteratorRight,Container>& rIterator)
 {return lIterator.base() < rIterator.base();}
 
 template<typename Iterator,typename Container>
 inline bool
-operator<(const normalIterator<Iterator,Container>& lIterator,
-            const normalIterator<Iterator,Container>& rIterator)
+operator<(const NormalIterator<Iterator,Container>& lIterator,
+            const NormalIterator<Iterator,Container>& rIterator)
 {return lIterator.base() < rIterator.base();}
 
 template<typename IteratorLeft,typename IteratorRight,typename Container>
 inline bool
-operator>(const normalIterator<IteratorLeft,Container>& lIterator,
-            const normalIterator<IteratorRight,Container>& rIterator)
+operator>(const NormalIterator<IteratorLeft,Container>& lIterator,
+            const NormalIterator<IteratorRight,Container>& rIterator)
 {return lIterator.base() > rIterator.base();}
 
 template<typename Iterator,typename Container>
 inline bool
-operator>(const normalIterator<Iterator,Container>& lIterator,
-            const normalIterator<Iterator,Container>& rIterator)
+operator>(const NormalIterator<Iterator,Container>& lIterator,
+            const NormalIterator<Iterator,Container>& rIterator)
 {return lIterator.base() > rIterator.base();}
 
 template<typename IteratorLeft,typename IteratorRight,typename Container>
 inline bool
-operator<=(const normalIterator<IteratorLeft,Container>& lIterator,
-            const normalIterator<IteratorRight,Container>& rIterator)
+operator<=(const NormalIterator<IteratorLeft,Container>& lIterator,
+            const NormalIterator<IteratorRight,Container>& rIterator)
 {return lIterator.base() <= rIterator.base();}
 
 template<typename Iterator,typename Container>
 inline bool
-operator<=(const normalIterator<Iterator,Container>& lIterator,
-            const normalIterator<Iterator,Container>& rIterator)
+operator<=(const NormalIterator<Iterator,Container>& lIterator,
+            const NormalIterator<Iterator,Container>& rIterator)
 {return lIterator.base() <= rIterator.base();}
 
 template<typename IteratorLeft,typename IteratorRight,typename Container>
 inline bool
-operator>=(const normalIterator<IteratorLeft,Container>& lIterator,
-            const normalIterator<IteratorRight,Container>& rIterator)
+operator>=(const NormalIterator<IteratorLeft,Container>& lIterator,
+            const NormalIterator<IteratorRight,Container>& rIterator)
 {return lIterator.base() >= rIterator.base();}
 
 template<typename Iterator,typename Container>
 inline bool
-operator>=(const normalIterator<Iterator,Container>& lIterator,
-            const normalIterator<Iterator,Container>& rIterator)
+operator>=(const NormalIterator<Iterator,Container>& lIterator,
+            const NormalIterator<Iterator,Container>& rIterator)
 {return lIterator.base() >= rIterator.base();}
 
 template<typename IteratorLeft,typename IteratorRight,typename Container>
-inline typename normalIterator<IteratorLeft,Container>::differenceType
-operator-(const normalIterator<IteratorLeft,Container>& lIterator,
-            const normalIterator<IteratorRight,Container>& rIterator)
+inline typename NormalIterator<IteratorLeft,Container>::differenceType
+operator-(const NormalIterator<IteratorLeft,Container>& lIterator,
+            const NormalIterator<IteratorRight,Container>& rIterator)
 {return lIterator.base() - rIterator.base();}
 
 template<typename Iterator,typename Container>
-inline normalIterator<Iterator,Container>
-operator+(typename normalIterator<Iterator,Container>::differenceType n,
-            const normalIterator<Iterator,Container>& iterator)
-{return normalIterator<Iterator,Container>(iterator.base() + n);}
+inline NormalIterator<Iterator,Container>
+operator+(typename NormalIterator<Iterator,Container>::differenceType n,
+            const NormalIterator<Iterator,Container>& iterator)
+{return NormalIterator<Iterator,Container>(iterator.base() + n);}
 
 
 //反转的迭代器在移动上与一般迭代器相反
 template<typename Iterator>
-class reverseIterator : Iterator
+class ReverseIterator : Iterator
 {
 protected:
     Iterator current;
@@ -290,13 +290,13 @@ public:
     typedef typename traitsType::referenceType   referenceType;
 
     constexpr
-    reverseIterator()noexcept : current() {}
+    ReverseIterator()noexcept : current() {}
 
     explicit constexpr
-    reverseIterator(IteratorType i) : current(i) {}
+    ReverseIterator(IteratorType i) : current(i) {}
 
     constexpr
-    reverseIterator(const reverseIterator& i) : current(i.current) {}
+    ReverseIterator(const ReverseIterator& i) : current(i.current) {}
 
     constexpr
     IteratorType
@@ -316,7 +316,7 @@ public:
     {return &(operator*());}
 
     constexpr
-    reverseIterator&
+    ReverseIterator&
     operator++()
     {
         --current;
@@ -324,7 +324,7 @@ public:
     }
 
     constexpr
-    reverseIterator&
+    ReverseIterator&
     operator--()
     {
         ++current;
@@ -332,39 +332,39 @@ public:
     }
 
     constexpr
-    reverseIterator
+    ReverseIterator
     operator++(int)
     {
-        reverseIterator tmp = *this;
+        ReverseIterator tmp = *this;
         --current;
         return tmp;
     }
 
     constexpr
-    reverseIterator
+    ReverseIterator
     operator--(int)
     {
-        reverseIterator tmp = *this;
+        ReverseIterator tmp = *this;
         ++current;
         return tmp;
     }
 
     constexpr
-    reverseIterator
+    ReverseIterator
     operator+(differenceType n)
     {
-        return reverseIterator(current - n);
+        return ReverseIterator(current - n);
     }
 
     constexpr
-    reverseIterator
+    ReverseIterator
     operator-(differenceType n)
     {
-        return reverseIterator(current + n);
+        return ReverseIterator(current + n);
     }
 
     constexpr
-    reverseIterator&
+    ReverseIterator&
     operator+=(differenceType n)
     {
         current -= n;
@@ -372,13 +372,28 @@ public:
     }
 
     constexpr
-    reverseIterator&
+    ReverseIterator&
     operator-=(differenceType n)
     {
         current += n;
         return *this;
     }
 
+
+template<typename Iterator>
+class MoveIterator
+{
+protected:
+    Iterator current;
+    
+    typedef IteratorTraits<Iterator>            traitsType;
+    typedef typename traitsType::referenceType  baseReferenceType;
+public:
+    typedef Iterator IteratorType;
+    typedef typename traitsType::categoryType   categoryType;
+    typedef typename traitsType::valueType      valueType;
+    typedef typename traitsType::differenceType differenceType;
+};
 
 };
 

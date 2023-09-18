@@ -55,7 +55,7 @@ struct YVectorBase
     YVectorBase(size_t n) : impl()
     {createStorage(n);}
 
-    YVectorBase(YVectorBase&& other) : impl()
+    YVectorBase(YVectorBase&& other) noexcept : impl()
     {this->impl.swapData(other.impl);}
 
     ~YVectorBase()
@@ -98,10 +98,10 @@ public:
     typedef typename Alloc::constPointerType                     constPointerType;
     typedef typename Alloc::referenceType                        referenceType;
     typedef typename Alloc::constReferenceType                   constReferenceType;
-    typedef normalIterator<pointerType,YVector>                  iterator;
-    typedef normalIterator<constPointerType,YVector>             constIterator;
-    typedef reverseIterator<iterator>                            _reverseIterator;
-    typedef reverseIterator<constIterator>                       _constReverseIterator;
+    typedef NormalIterator<pointerType,YVector>                  iterator;
+    typedef NormalIterator<constPointerType,YVector>             constIterator;
+    typedef ReverseIterator<iterator>                            _ReverseIterator;
+    typedef ReverseIterator<constIterator>                       _constReverseIterator;
     typedef size_t                                               sizeType;
     typedef ptrdiff_t                                            differenceType;
 
@@ -117,12 +117,8 @@ public:
     YVector(const YVector& other) : base(other.size())
     {uninitializedCopy(other.begin(),other.end(),this->impl.start);}
 
-    YVector(YVector&& other) : base(std::move(other)) {}
+    YVector(YVector&& other) noexcept : base(std::move(other)) {}
 
-    /*
-    待实现
-    Yvector(initializer_list<valueType> l) : base() {}
-    */
     template<typename ForwardIterator>
     YVector(ForwardIterator first,ForwardIterator last)
     {
@@ -141,17 +137,17 @@ public:
     begin() const noexcept
     {return constIterator(this->impl.start);}
 
-    _reverseIterator
+    _ReverseIterator
     rbegin() noexcept
-    {return _reverseIterator(this->impl.start);}
+    {return _ReverseIterator(this->impl.start);}
 
     _constReverseIterator
     rbegin() const
     {return _constReverseIterator(this->impl.start);}
 
-    _reverseIterator
+    _ReverseIterator
     rend() noexcept
-    {return _reverseIterator(end());}
+    {return _ReverseIterator(end());}
 
     _constReverseIterator
     rend() const noexcept
@@ -272,17 +268,35 @@ public:
 
     void reserve(sizeType n);
 
-    iterator insert(constIterator position,const valueType& x);
+    iterator 
+    insert(constIterator position,const valueType& x);
 
-    iterator insert(constIterator position,valueType&& x)
+    iterator 
+    insert(constIterator position,valueType&& x)
     {return insertRval(position,std::move(x));}
 
-    iterator insert(constIterator positon,sizeType n,const valueType& x)
+    iterator 
+    insert(constIterator positon,sizeType n,const valueType& x)
     {
         differenceType offset = positon - cbegin();
         fillInsert(begin() + offset,n,x);
         return begin() + offset;
     }
+
+    //下面这个inert函数的版本是不健全的写法
+    //在stl库中使用了std::_RequireInputIter<_InputIterator>来判断作为复制对象的interator是否可转换
+    //比较健全的实现需要实现一些模板函数来 未来会考虑实现
+    template<typename InputIterator>
+    iterator
+    insert(constIterator position,InputIterator first,InputIterator last)
+    {
+        differenceType offset = position -cbegin();
+        insertDispatch(begin() + offset,first,last,false_type());
+        return begin() + offset;
+    }
+
+
+
 
     /*
     以下是未实现的函数
@@ -307,8 +321,7 @@ public:
 
     erase()
 
-
-
+    Yvector(initializer_list<valueType> l) : base() {}
     */
 
     
@@ -322,15 +335,11 @@ protected:
 
     //defaul初始化函数
     void defaultInitialize(sizeType n)
-    {
-        this->impl.finish = uninitializedDefaultNA(this->impl.start,n);
-    }
+    {this->impl.finish = uninitializedDefaultNA(this->impl.start,n);}
 
     //指定值的初始化
     void fillInitialize(sizeType n,const valueType& value)
-    {
-        this->impl.finish = uninitializedFillN(this->impl.start,n,value);
-    }
+    {this->impl.finish = uninitializedFillN(this->impl.start,n,value);}
 
     //使用一对迭代器进行初始化
     template<typename ForwardIterator>
@@ -342,12 +351,10 @@ protected:
         this->impl.finish = uninitializedCopy(first,last,this->impl.start);
     }
 
-    //initializeDispatch 有两个分支是对两个不同容器初始化的不同处理
+    //initializeDispatch 有两个分支 是两个不同容器构造的不同处理
     template<typename ForwardIterator>
     void initializeDispatch(ForwardIterator first,ForwardIterator last,false_type)
-    {
-        rangeInitialize(first,last);
-    }
+    {rangeInitialize(first,last);}
 
     template<typename Integer>
     void initializeDispatch(Integer n,Integer value,true_type)
@@ -411,6 +418,15 @@ protected:
 
     //往容器指定位置添加指定数量的元素的内部函数
     void fillInsert(iterator position,sizeType n,const valueType& x);
+
+    template<typename _InputIterator>
+    void insertDispatch(iterator position,_InputIterator first,_InputIterator last,false_type)
+    {rangeInsert(position,first,last,/*iterator_category(first)*/)}
+
+    //在容器指定位置插入first到last的元素
+    template<typename _ForwardIterator>
+    void rangeInsert(iterator position,_ForwardIterator first,_ForwardIterator last
+    ,ForwardIterator);
 
 private:
 }; 

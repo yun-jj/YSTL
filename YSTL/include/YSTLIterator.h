@@ -133,8 +133,6 @@ public:
     std::enable_if<(std::is_same<iter,typename Container::pointerType>::value),Container>::type>& i)noexcept
         :current(i.base()) {}
 
-
-
     referenceType
     operator*() const noexcept
     {return *current;}
@@ -190,87 +188,96 @@ public:
     {return current;}
 };
 
-//以下是NormalIterator 运算重载
+//以下是NormalIterator 运算重载 为什么需要left和right类型的函数重载 源码note如下
+
+// Note: In what follows, the left- and right-hand-side iterators are
+// allowed to vary in types (conceptually in cv-qualification) so that
+// comparison between cv-qualified and non-cv-qualified iterators be
+// valid.  However, the greedy and unfriendly operators in std::rel_ops
+// will make overload resolution ambiguous (when in scope) if we don't
+// provide overloads whose operands are of the same type.  Can someone
+// remind me what generic programming is about? -- Gaby
+
 template<typename IteratorLeft,typename IteratorRight,typename Container>
-inline bool
+inline constexpr bool
 operator==(const NormalIterator<IteratorLeft,Container>& lIterator,
             const NormalIterator<IteratorRight,Container>& rIterator)
 {return lIterator.base() == rIterator.base();}
 
 template<typename Iterator,typename Container>
-inline bool
+inline constexpr bool
 operator==(const NormalIterator<Iterator,Container>& lIterator,
             const NormalIterator<Iterator,Container>& rIterator)
 {return lIterator.base() == rIterator.base();}
 
 template<typename IteratorLeft,typename IteratorRight,typename Container>
-inline bool
+inline constexpr bool
 operator!=(const NormalIterator<IteratorLeft,Container>& lIterator,
             const NormalIterator<IteratorRight,Container>& rIterator)
 {return lIterator.base() != rIterator.base();}
 
 template<typename Iterator,typename Container>
-inline bool
+inline constexpr bool
 operator!=(const NormalIterator<Iterator,Container>& lIterator,
             const NormalIterator<Iterator,Container>& rIterator)
 {return lIterator.base() != rIterator.base();}
 
 template<typename IteratorLeft,typename IteratorRight,typename Container>
-inline bool
+inline constexpr bool
 operator<(const NormalIterator<IteratorLeft,Container>& lIterator,
             const NormalIterator<IteratorRight,Container>& rIterator)
 {return lIterator.base() < rIterator.base();}
 
 template<typename Iterator,typename Container>
-inline bool
+inline constexpr bool
 operator<(const NormalIterator<Iterator,Container>& lIterator,
             const NormalIterator<Iterator,Container>& rIterator)
 {return lIterator.base() < rIterator.base();}
 
 template<typename IteratorLeft,typename IteratorRight,typename Container>
-inline bool
+inline constexpr bool
 operator>(const NormalIterator<IteratorLeft,Container>& lIterator,
             const NormalIterator<IteratorRight,Container>& rIterator)
 {return lIterator.base() > rIterator.base();}
 
 template<typename Iterator,typename Container>
-inline bool
+inline constexpr bool
 operator>(const NormalIterator<Iterator,Container>& lIterator,
             const NormalIterator<Iterator,Container>& rIterator)
 {return lIterator.base() > rIterator.base();}
 
 template<typename IteratorLeft,typename IteratorRight,typename Container>
-inline bool
+inline constexpr bool
 operator<=(const NormalIterator<IteratorLeft,Container>& lIterator,
             const NormalIterator<IteratorRight,Container>& rIterator)
 {return lIterator.base() <= rIterator.base();}
 
 template<typename Iterator,typename Container>
-inline bool
+inline constexpr bool
 operator<=(const NormalIterator<Iterator,Container>& lIterator,
             const NormalIterator<Iterator,Container>& rIterator)
 {return lIterator.base() <= rIterator.base();}
 
 template<typename IteratorLeft,typename IteratorRight,typename Container>
-inline bool
+inline constexpr bool
 operator>=(const NormalIterator<IteratorLeft,Container>& lIterator,
             const NormalIterator<IteratorRight,Container>& rIterator)
 {return lIterator.base() >= rIterator.base();}
 
 template<typename Iterator,typename Container>
-inline bool
+inline constexpr bool
 operator>=(const NormalIterator<Iterator,Container>& lIterator,
             const NormalIterator<Iterator,Container>& rIterator)
 {return lIterator.base() >= rIterator.base();}
 
 template<typename IteratorLeft,typename IteratorRight,typename Container>
-inline typename NormalIterator<IteratorLeft,Container>::differenceType
+inline constexpr typename NormalIterator<IteratorLeft,Container>::differenceType
 operator-(const NormalIterator<IteratorLeft,Container>& lIterator,
             const NormalIterator<IteratorRight,Container>& rIterator)
 {return lIterator.base() - rIterator.base();}
 
 template<typename Iterator,typename Container>
-inline NormalIterator<Iterator,Container>
+inline constexpr NormalIterator<Iterator,Container>
 operator+(typename NormalIterator<Iterator,Container>::differenceType n,
             const NormalIterator<Iterator,Container>& iterator)
 {return NormalIterator<Iterator,Container>(iterator.base() + n);}
@@ -300,7 +307,8 @@ public:
 
     constexpr
     IteratorType
-    base() {return current;}
+    base() const 
+    {return current;}
 
     constexpr
     referenceType
@@ -378,8 +386,11 @@ public:
         current += n;
         return *this;
     }
+};
 
-
+//Moveiterator 行为与底层迭代器相同
+//但其解引用运算符会隐式将底层迭代器的解引用运算符返回值转换为右值引用。
+//一些通用算法可以使用移动迭代器来替代复制操作，以实现移动操作。
 template<typename Iterator>
 class MoveIterator
 {
@@ -393,9 +404,192 @@ public:
     typedef typename traitsType::categoryType   categoryType;
     typedef typename traitsType::valueType      valueType;
     typedef typename traitsType::differenceType differenceType;
-};
+    typedef Iterator                            pointerType;
+    //如果baseReferenceType是引用类型 referenceType 的类型为 type&& 否则就为原本的baseReferenceType类型
+    typedef typename std::conditional<std::is_reference<baseReferenceType>::value,
+        typename std::remove_reference<baseReferenceType>::type&&,baseReferenceType>::type 
+    referenceType;
 
+    constexpr
+    MoveIterator() 
+    : current() {}
+
+    explicit constexpr
+    MoveIterator(IteratorType i)
+    : current(i) {}
+
+    template<typename Iter>
+    constexpr
+    MoveIterator(const MoveIterator<Iter>& i)
+    : current(i.base()) {}
+
+    constexpr 
+    IteratorType
+    base() const
+    {return current;}
+
+    constexpr 
+    referenceType
+    operator*() const
+    {return std::static_cast<referenceType>(*current);}
+
+    constexpr
+    pointerType
+    operator->() const
+    {return current;}
+
+    constexpr
+    MoveIterator&
+    operator++()
+    {
+        ++current;
+        return *this;
+    }
+
+    constexpr
+    MoveIterator
+    operator++(int)
+    {
+        MoveIterator tmp = *this;
+        ++current;
+        return tmp;
+    }
+
+    constexpr
+    MoveIterator&
+    operator--()
+    {
+        --current;
+        return *this;
+    }
+
+    constexpr
+    MoveIterator
+    operator--(int)
+    {
+        MoveIterator tmp = *this;
+        --current;
+        return tmp;
+    }
+
+    constexpr
+    MoveIterator
+    operator+(differenceType n)
+    {return MoveIterator(current + n);}
+
+    constexpr
+    MoveIterator&
+    operator+=(differenceType n)
+    {
+        current += n;
+        return *this;
+    }
+
+    constexpr
+    MoveIterator
+    operator-(differenceType n)
+    {return MoveIterator(current - n);}
+
+    constexpr
+    MoveIterator&
+    operator-=(differenceType n)
+    {
+        current -= n;
+        return *this;
+    }
+
+    constexpr
+    referenceType
+    operator[](differenceType n) const
+    {return std::move(current[n]);}
 };
+//以下是MoveIterator的运算符重载
+
+template<typename IteratorLeft,typename IteratorRight>
+inline constexpr bool
+operator==(const MoveIterator<IteratorLeft>& lIterator,
+            const MoveIterator<IteratorRight>& rIterator)
+{return lIterator.base() == rIterator.base();}
+
+template<typename Iterator>
+inline constexpr bool
+operator==(const MoveIterator<Iterator>& lIterator,
+            const MoveIterator<Iterator>& rIterator)
+{return lIterator.base() == rIterator.base();}
+
+template<typename IteratorLeft,typename IteratorRight>
+inline constexpr bool
+operator!=(const MoveIterator<IteratorLeft>& lIterator,
+            const MoveIterator<IteratorRight>& rIterator)
+{return !(lIterator == rIterator);}
+
+template<typename Iterator>
+inline constexpr bool
+operator!=(const MoveIterator<Iterator>& lIterator,
+            const MoveIterator<Iterator>& rIterator)
+{return !(lIterator == rIterator);}
+
+template<typename IteratorLeft,typename IteratorRight>
+inline constexpr bool
+operator<(const MoveIterator<IteratorLeft>& lIterator,
+            const MoveIterator<IteratorRight>& rIterator)
+{return lIterator.base() < rIterator.base();}
+
+template<typename Iterator>
+inline constexpr bool
+operator<(const MoveIterator<Iterator>& lIterator,
+            const MoveIterator<Iterator>& rIterator)
+{return lIterator.base() < rIterator.base();}
+
+template<typename IteratorLeft,typename IteratorRight>
+inline constexpr bool
+operator<=(const MoveIterator<IteratorLeft>& lIterator,
+            const MoveIterator<IteratorRight>& rIterator)
+{return !(rIterator < lIterator);}
+
+template<typename Iterator>
+inline constexpr bool
+operator<=(const MoveIterator<Iterator>& lIterator,
+            const MoveIterator<Iterator>& rIterator)
+{return !(rIterator < lIterator);}
+
+template<typename IteratorLeft,typename IteratorRight>
+inline constexpr bool
+operator>(const MoveIterator<IteratorLeft>& lIterator,
+            const MoveIterator<IteratorRight>& rIterator)
+{return rIterator < lIterator;}
+
+template<typename Iterator>
+inline constexpr bool
+operator>(const MoveIterator<Iterator>& lIterator,
+            const MoveIterator<Iterator>& rIterator)
+{return rIterator < lIterator;}
+
+template<typename IteratorLeft,typename IteratorRight>
+inline constexpr bool
+operator>=(const MoveIterator<IteratorLeft>& lIterator,
+            const MoveIterator<IteratorRight>& rIterator)
+{return !(lIterator < rIterator);}
+
+template<typename Iterator>
+inline constexpr bool
+operator>=(const MoveIterator<Iterator>& lIterator,
+            const MoveIterator<Iterator>& rIterator)
+{return !(lIterator < rIterator);}
+
+//DR685
+template<typename IteratorLeft,typename IteratorRight>
+inline constexpr auto
+operator-(const MoveIterator<IteratorLeft>& lIterator,
+            const MoveIterator<IteratorRight>& rIterator)
+->decltype(lIterator.base() - rIterator.base())
+{return lIterator.base() - rIterator.base();}
+
+template<typename Iterator>
+inline constexpr MoveIterator<Iterator>
+operator+(typename MoveIterator<Iterator>::differenceType n,
+            const MoveIterator<Iterator>& x)
+{return x + n;}
 
 } // namespace YSTL
 

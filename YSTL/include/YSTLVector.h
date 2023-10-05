@@ -283,17 +283,18 @@ public:
         return begin() + offset;
     }
 
-    //下面这个inert函数的版本是不健全的写法
-    //在stl库中使用了std::_RequireInputIter<_InputIterator>来判断作为复制对象的interator是否可转换
-    //比较健全的实现需要实现一些模板函数来 未来会考虑实现
-    template<typename InputIterator>
-    iterator
-    insert(constIterator position,InputIterator first,InputIterator last)
-    {
-        differenceType offset = position -cbegin();
-        insertDispatch(begin() + offset,first,last,false_type());
-        return begin() + offset;
-    }
+    // 下面这个inert函数的版本是不健全的写法
+    // 在stl库中使用了std::_RequireInputIter<_InputIterator>来判断作为复制对象的interator是否可转换为IuputIterator类型
+    // 比较健全的实现需要实现一些模板函数
+    // template<typename InputIterator,
+    //     typename = RequireForwardIter<InputIterator>>
+    // iterator
+    // insert(constIterator position,InputIterator first,InputIterator last)
+    // {
+    //     differenceType offset = position - cbegin();
+    //     insertDispatch(begin() + offset,first,last,false_type());
+    //     return begin() + offset;
+    // }
 
 
 
@@ -408,7 +409,7 @@ protected:
         *positon = std::forward<Arg>(arg);
     }
 
-    //在指定位置插入元素执行这个插入时会增加容器的大小
+    //在指定位置插入元素 执行这个插入时会增加容器的大小
     template<typename... Args>
     void reallocInsert(iterator position,Args&&... args);
     
@@ -419,14 +420,14 @@ protected:
     //往容器指定位置添加指定数量的元素的内部函数
     void fillInsert(iterator position,sizeType n,const valueType& x);
 
-    template<typename _InputIterator>
-    void insertDispatch(iterator position,_InputIterator first,_InputIterator last,false_type)
-    {rangeInsert(position,first,last,/*iterator_category(first)*/)}
+    // template<typename _InputIterator>
+    // void insertDispatch(iterator position,_InputIterator first,_InputIterator last,false_type)
+    // {rangeInsert(position,first,last,iteratorCategory(first));}
 
-    //在容器指定位置插入first到last的元素
-    template<typename _ForwardIterator>
-    void rangeInsert(iterator position,_ForwardIterator first,_ForwardIterator last
-    ,ForwardIterator);
+    // //在容器指定位置插入first到last的元素
+    // template<typename _ForwardIterator>
+    // void rangeInsert(iterator position,_ForwardIterator first,_ForwardIterator last
+    // ,ForwardIterator);
 
 private:
 }; 

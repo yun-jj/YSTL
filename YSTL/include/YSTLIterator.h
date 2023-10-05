@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <type_traits>
+# include<cstdlib>
 
 namespace YSTL
 {
@@ -51,6 +52,13 @@ struct Iterator
     typedef value&      referenceType;
     typedef ptrdiff_t   differenceType;
 };
+
+template<typename Iter>
+inline constexpr
+typename IteratorTraits<Iter>::categoryType
+iteratorCategory(const Iter&)
+{return typename IteratorTraits<Iter>::categoryType();}
+
 /*****以下是关于迭代器的函数*****/
 //distance 函数用于计算两个迭代器之间的距离
 template<typename _RandomAccessIterator>
@@ -431,7 +439,7 @@ public:
     constexpr 
     referenceType
     operator*() const
-    {return std::static_cast<referenceType>(*current);}
+    {return static_cast<referenceType>(*current);}
 
     constexpr
     pointerType
@@ -503,6 +511,19 @@ public:
     operator[](differenceType n) const
     {return std::move(current[n]);}
 };
+
+template<typename Iterator>
+inline constexpr 
+MoveIterator<Iterator>
+makeMoveIterator(Iterator i)
+{return MoveIterator<Iterator>(i);}
+
+// template<typename Inter>
+//     using RequireForwardIter = typename 
+//         std::enable_if<std::is_convertible<typename
+// 		IteratorTraits<InIter>::categoryType,
+// 			       ForwardIterator>::value>::type;
+
 //以下是MoveIterator的运算符重载
 
 template<typename IteratorLeft,typename IteratorRight>

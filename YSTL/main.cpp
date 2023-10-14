@@ -1,4 +1,5 @@
 #include"include/YSTLVector.h"
+#include<string>
 
 using namespace YSTL;
 
@@ -20,20 +21,9 @@ void testVectorIteratorAccess(YVector<value>& ve,std::string information)
 
 int main(void)
 {
-    //值初始化
-    YVector<int> ve1(YVector<int>(10,2));
-    ve1[0] = 3;
-    ve1.erase(ve1.begin());
-    ve1[0] = 1;
-    ve1[1] = 2;
-    ve1[2] = 3;
-    ve1.erase(ve1.begin(),ve1.begin() + 3);
-    ve1.emplace(ve1.end(),10);
-    ve1.emplace(ve1.begin() + 2,12);
-    ve1.emplace_back(77);
-    ve1.push_back(1111);
-    int tmp = 132;
-    ve1.push_back(tmp);
+    YVector<std::string> ve1;
+    ve1.push_back("123");
+    ve1.emplace_back("456");
     testVectorIteratorAccess(ve1,"ve1");
     return 0;
 }

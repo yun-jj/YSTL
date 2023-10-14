@@ -7,8 +7,10 @@
 
 namespace YSTL
 {
-//三个基本的迭代器类型
-struct ForwardIterator{};
+//五个基本的迭代器类型
+struct inputIterator{};
+struct outputIterator{};
+struct ForwardIterator : public inputIterator{};
 struct BidirectionalIterator : public ForwardIterator{};
 struct RandomAccessIterator : public BidirectionalIterator{};
 
@@ -67,12 +69,12 @@ typename IteratorTraits<_RandomAccessIterator>::differenceType
 _distance(_RandomAccessIterator first,_RandomAccessIterator last,RandomAccessIterator)
 {return last - first;}
 
-template<typename _ForwardIterator>
+template<typename _InputIterator>
 inline
-typename IteratorTraits<_ForwardIterator>::differenceType
-_distance(_ForwardIterator first,_ForwardIterator last,ForwardIterator)
+typename IteratorTraits<_InputIterator>::differenceType
+_distance(_InputIterator first,_InputIterator last,inputIterator)
 {
-    typename IteratorTraits<_ForwardIterator>::differenceType n = 0;
+    typename IteratorTraits<_InputIterator>::differenceType n = 0;
     for(;first != last;++first)
         ++n;
     return n;
@@ -86,17 +88,17 @@ distance(_Iterator first,_Iterator last)
     return _distance(first,last,typename IteratorTraits<_Iterator>::categoryType());
 }
 //advance 函数用于移动迭代器
-template<typename _Iterator,typename _differenceType>
+template<typename _InputIterator,typename _differenceType>
 inline void
-_advance(_Iterator i,_differenceType n,ForwardIterator)
+_advance(_InputIterator i,_differenceType n,inputIterator)
 {
     while(n--)
         ++i;
 }
 
-template<typename _Iterator,typename _differenceType>
+template<typename _BidirectionalIterator,typename _differenceType>
 inline void
-_advance(_Iterator i,_differenceType n,BidirectionalIterator)
+_advance(_BidirectionalIterator i,_differenceType n,BidirectionalIterator)
 {
     if(n > 0)
         while(n--)
@@ -106,9 +108,9 @@ _advance(_Iterator i,_differenceType n,BidirectionalIterator)
             --i;
 }
 
-template<typename _Iterator,typename _differenceType>
+template<typename _RandomAccessIterator,typename _differenceType>
 inline void
-_advance(_Iterator i,_differenceType n,RandomAccessIterator)
+_advance(_RandomAccessIterator i,_differenceType n,RandomAccessIterator)
 {i+=n;}
 
 template<typename _Iterator,typename _n>

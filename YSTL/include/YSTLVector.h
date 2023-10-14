@@ -115,14 +115,14 @@ public:
     {fillInitialize(n,value);}
 
     YVector(const YVector& other) : base(other.size())
-    {uninitializedCopy(other.begin(),other.end(),this->impl.start);}
+    {this->impl.finish = uninitializedCopy(other.begin(),other.end(),this->impl.start);}
 
     YVector(YVector&& other) noexcept : base(std::move(other)) {}
 
-    template<typename ForwardIterator>
-    YVector(ForwardIterator first,ForwardIterator last)
+    template<typename _InputIterator>
+    YVector(_InputIterator first,_InputIterator last)
     {
-        typedef typename isInteger<ForwardIterator>::value  Integral;
+        typedef typename isInteger<_InputIterator>::value  Integral;
         initializeDispatch(first,last,Integral());
     }
 
@@ -178,7 +178,7 @@ public:
     {return constReferenceType(this->impl.finish);}
 
     sizeType
-    size()
+    size() const
     {return sizeType(this->impl.finish - this->impl.start);}
 
     sizeType
@@ -255,7 +255,7 @@ public:
     void swap(YVector& other)
     {this->impl.swapData(other.impl);}
 
-    void push_back(const valueType value)
+    void push_back(const valueType& value)
     {
         if(this->impl.finish != this->impl.endOfStorage)
         {
@@ -265,6 +265,9 @@ public:
         else
             reallocInsert(end(),value);
     }
+
+    void push_back(valueType&& value)
+    {emplace_back(std::move(value));}
 
     void reserve(sizeType n);
 
@@ -282,6 +285,39 @@ public:
         fillInsert(begin() + offset,n,x);
         return begin() + offset;
     }
+
+    YVector&
+    operator=(YVector& other);
+
+    void pop_back() noexcept
+    {
+        if(size() >= 1)
+        {
+            --this->impl.finish;
+            destroy(this->impl.finish);
+        }
+    }
+
+    iterator
+    erase(constIterator position)
+    {return mErase(begin() + (position - cbegin()));}
+
+    iterator
+    erase(constIterator first,constIterator last)
+    {
+        auto beg = begin();
+        auto cbeg = cbegin();
+        return mErase(beg + (first - cbeg),beg + (last - cbeg));
+    }
+
+    template<typename... Args>
+    iterator
+    emplace(constIterator positon,Args&&... args)
+    {return emplaceAux(positon,std::forward<Args>(args)...);}
+
+    template<typename... Args>
+    referenceType
+    emplace_back(Args&&... args);
 
     // 下面这个inert函数的版本是不健全的写法
     // 在stl库中使用了std::_RequireInputIter<_InputIterator>来判断作为复制对象的interator是否可转换为IuputIterator类型
@@ -314,15 +350,16 @@ public:
     (实现待考虑)
     insert(iterator,initializer_list<value_type>)
 
-    operator=()
+    (实现待考虑)
+    operator=(initializer_list<valueType> l)
 
-    emplace_back()
+    (实现待考虑)
+    vector&
+    operator=(vector&& __x) noexcept(_Alloc_traits::_S_nothrow_move())
 
-    pop_back()
-
-    erase()
-
+    (实现待考虑)
     Yvector(initializer_list<valueType> l) : base() {}
+
     */
 
     
@@ -343,8 +380,8 @@ protected:
     {this->impl.finish = uninitializedFillN(this->impl.start,n,value);}
 
     //使用一对迭代器进行初始化
-    template<typename ForwardIterator>
-    void rangeInitialize(ForwardIterator first,ForwardIterator last)
+    template<typename _InputIterator>
+    void rangeInitialize(_InputIterator first,_InputIterator last)
     {
         const sizeType n = YSTL::distance(first,last);
         this->impl.start = this->mAllocator(n);
@@ -353,8 +390,8 @@ protected:
     }
 
     //initializeDispatch 有两个分支 是两个不同容器构造的不同处理
-    template<typename ForwardIterator>
-    void initializeDispatch(ForwardIterator first,ForwardIterator last,false_type)
+    template<typename _InputIterator>
+    void initializeDispatch(_InputIterator first,_InputIterator last,false_type)
     {rangeInitialize(first,last);}
 
     template<typename Integer>
@@ -367,9 +404,9 @@ protected:
     }
 
     //使用迭代器的拷贝函数
-    template<typename ForwardIterator>
+    template<typename _ForwardIterator>
     pointerType
-    allocateAndCopy(sizeType n,ForwardIterator first,ForwardIterator last)
+    allocateAndCopy(sizeType n,_ForwardIterator first,_ForwardIterator last)
     {
         pointerType result = this->mAllocator(n);
         uninitializedCopy(first,last,result);
@@ -419,6 +456,38 @@ protected:
 
     //往容器指定位置添加指定数量的元素的内部函数
     void fillInsert(iterator position,sizeType n,const valueType& x);
+
+    //移除指定位置元素的内部函数
+    iterator 
+    mErase(iterator positon)
+    {
+        if(positon + 1 != end())
+            std::move(positon.base() + 1,end().base(),positon.base());
+            // std::move_backward((positon + 1).base(),end().base(),end().base() - 1);
+        --this->impl.finish;
+        destroy(this->impl.finish);
+        return positon;
+    }
+
+    //移除指定范围内的元素
+    iterator
+    mErase(iterator first,iterator last)
+    {
+        if(first != last)
+        {
+            if(last != end())
+                std::move(last.base(),end().base(),first.base());
+            eraseAtEnd(first.base() + (end() - last));
+        }
+        return first;
+    }
+
+    //emplace的内部函数
+    template<typename... Args>
+    iterator
+    emplaceAux(constIterator positon,Args&&... args);
+
+
 
     // template<typename _InputIterator>
     // void insertDispatch(iterator position,_InputIterator first,_InputIterator last,false_type)

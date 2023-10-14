@@ -21,20 +21,19 @@ void testVectorIteratorAccess(YVector<value>& ve,std::string information)
 int main(void)
 {
     //值初始化
-    YVector<int> ve(10,2);
-    ve.data();
-    testVectorRandomAccess(ve,"ve");
-
-    YVector<int> ve1(ve.begin(),ve.end());
-    testVectorRandomAccess(ve1,"ve1");
-
-    ve[2] = 3;
-    ve.swap(ve1);
-    ve.push_back(4);
-    ve.insert(ve.begin(),10);
-    testVectorIteratorAccess(ve,"ve");
-    ve.insert(ve.begin(),1,8);
-    testVectorIteratorAccess(ve,"ve");
-    ve.clear();
+    YVector<int> ve1(YVector<int>(10,2));
+    ve1[0] = 3;
+    ve1.erase(ve1.begin());
+    ve1[0] = 1;
+    ve1[1] = 2;
+    ve1[2] = 3;
+    ve1.erase(ve1.begin(),ve1.begin() + 3);
+    ve1.emplace(ve1.end(),10);
+    ve1.emplace(ve1.begin() + 2,12);
+    ve1.emplace_back(77);
+    ve1.push_back(1111);
+    int tmp = 132;
+    ve1.push_back(tmp);
+    testVectorIteratorAccess(ve1,"ve1");
     return 0;
 }

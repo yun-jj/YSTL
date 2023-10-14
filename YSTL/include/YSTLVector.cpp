@@ -65,15 +65,9 @@ YVector<T,Alloc>::insert(constIterator position,const valueType& x)
             construct(this->impl.finish,x);
             ++this->impl.finish;
         }
-        else
-        {
-            insertAux(position,x);
-        }
+        else insertAux(position,x);
     }
-    else
-    {
-        reallocInsert(begin() + (position - cbegin()),x);
-    }
+    else reallocInsert(begin() + (position - cbegin()),x);
 
     return iterator(this->impl.start + n);
 }
@@ -90,16 +84,11 @@ YVector<T,Alloc>::insertRval(constIterator position,valueType&& x)
             construct(this->impl.finish,std::move(x));
             ++this->impl.finish;
         }
-        else
-        {
-            insertAux(begin() + n,std::move(x));
-        }
+        else insertAux(begin() + n,std::move(x));
+        
     }
-    else
-    {
-        reallocInsert(begin() + (position - cbegin()),x);
-    }
-
+    else reallocInsert(begin() + (position - cbegin()),x);
+    
     return iterator(this->impl.start + n);
 }
 
@@ -154,6 +143,59 @@ YVector<T,Alloc>::fillInsert(iterator position,sizeType n,const valueType& x)
     }
 }
 
+template<typename T,typename Alloc>
+YVector<T,Alloc>&
+YVector<T,Alloc>::operator=(YVector& other)
+{
+        sizeType otherSize = other.size(),selfCapacity = capacity(); 
+        this->eraseAtEnd(this->impl.start);
+        if(otherSize <= selfCapacity)
+        {
+            this->impl.finish =  uninitializedCopy(other.begin().base(),other.end().base()
+            ,this->impl.start);
+        }
+        else 
+        {
+            mDeallocator(this->impl.start,this->impl.endOfStorage - this->impl.start);
+            rangeInitialize(other.begin(),other.end());
+        }
+        return *this;
+}
+
+template<typename T,typename Alloc>
+template<typename... Args>
+typename YVector<T,Alloc>::iterator
+YVector<T,Alloc>::emplaceAux(constIterator position,Args&&... args)
+{
+    const auto n = position - cbegin();
+    if(this->impl.finish != this->impl.endOfStorage)
+        if(position == cend())
+        {
+            construct(this->impl.finish,std::forward<Args>(args)...);
+            ++this->impl.finish;
+        }
+        else
+            insertAux(begin() + n,std::move(std::forward<Args>(args)...));
+        
+    else
+        reallocInsert(begin() + n,std::forward<Args>(args)...);
+    return iterator(this->impl.start + n);
+}
+
+template<typename T,typename Alloc>
+template<typename... Args>
+typename YVector<T,Alloc>::referenceType
+YVector<T,Alloc>::emplace_back(Args&&... args)
+{
+    if(this->impl.finish != this->impl.endOfStorage)
+    {
+        construct(this->impl.finish,std::forward<Args>(args)...);
+        ++this->impl.finish;
+    }
+    else
+        reallocInsert(end(),std::forward<Args>(args)...);
+    return back();
+}
 // template<typename T,typename Alloc>
 // template<typename _ForwardIterator>
 // void

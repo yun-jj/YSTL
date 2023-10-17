@@ -45,7 +45,7 @@ YVector<T,Alloc>::reallocInsert(iterator position,Args&&... args)
 
     newFinish = uninitializedCopy(position.base(),oldFinish,newFinish);
 
-    destroy(oldStart,oldFinish);
+    YSTL::destroy(oldStart,oldFinish);
     mDeallocator(oldStart,this->impl.endOfStorage - oldStart);
     this->impl.start = newStart;
     this->impl.finish = newFinish;
@@ -62,7 +62,7 @@ YVector<T,Alloc>::insert(constIterator position,const valueType& x)
     {
         if(position == end())
         {
-            construct(this->impl.finish,x);
+            YSTL::construct(this->impl.finish,x);
             ++this->impl.finish;
         }
         else insertAux(position,x);
@@ -81,7 +81,7 @@ YVector<T,Alloc>::insertRval(constIterator position,valueType&& x)
     {
         if(position == end())
         {
-            construct(this->impl.finish,std::move(x));
+            YSTL::construct(this->impl.finish,std::move(x));
             ++this->impl.finish;
         }
         else insertAux(begin() + n,std::move(x));
@@ -132,7 +132,7 @@ YVector<T,Alloc>::fillInsert(iterator position,sizeType n,const valueType& x)
             newFinish += n;
             newFinish = uninitializedCopy(position.base(),this->impl.finish,newFinish);
 
-            destroy(this->impl.start,this->impl.finish);
+            YSTL::destroy(this->impl.start,this->impl.finish);
             mDeallocator(this->impl.start,this->impl.endOfStorage - this->impl.start);
 
             this->impl.start = newStart;
@@ -171,7 +171,7 @@ YVector<T,Alloc>::emplaceAux(constIterator position,Args&&... args)
     if(this->impl.finish != this->impl.endOfStorage)
         if(position == cend())
         {
-            construct(this->impl.finish,std::forward<Args>(args)...);
+            YSTL::construct(this->impl.finish,std::forward<Args>(args)...);
             ++this->impl.finish;
         }
         else
@@ -189,7 +189,7 @@ YVector<T,Alloc>::emplace_back(Args&&... args)
 {
     if(this->impl.finish != this->impl.endOfStorage)
     {
-        construct(this->impl.finish,std::forward<Args>(args)...);
+        YSTL::construct(this->impl.finish,std::forward<Args>(args)...);
         ++this->impl.finish;
     }
     else
